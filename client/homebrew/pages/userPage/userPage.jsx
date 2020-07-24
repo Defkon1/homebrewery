@@ -1,3 +1,4 @@
+require('./userPage.less');
 const React = require('react');
 const createClass = require('create-react-class');
 const _     = require('lodash');
@@ -42,15 +43,6 @@ const UserPage = createClass({
 		});
 	},
 
-	renderPrivateBrews : function(privateBrews){
-		if(!privateBrews || !privateBrews.length) return;
-
-		return [
-			<h1>{this.props.username}'s unpublished brews</h1>,
-			this.renderBrews(privateBrews)
-		];
-	},
-
 	render : function(){
 		const brews = this.getSortedBrews();
 
@@ -64,9 +56,14 @@ const UserPage = createClass({
 
 			<div className='content'>
 				<div className='phb'>
-					<h1>{this.props.username}'s brews</h1>
-					{this.renderBrews(brews.published)}
-					{this.renderPrivateBrews(brews.private)}
+					<div>
+						<h1>{this.props.username}'s brews</h1>
+						{this.renderBrews(brews.published)}
+					</div>
+					<div>
+						<h1>{this.props.username}'s unpublished brews</h1>
+						{this.renderBrews(brews.private)}
+					</div>
 				</div>
 			</div>
 		</div>;

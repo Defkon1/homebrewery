@@ -16,7 +16,8 @@ const config = require('nconf')
 
 //DB
 const mongoose = require('mongoose');
-mongoose.connect(config.get('mongodb_uri') || config.get('mongolab_uri') || 'mongodb://localhost/naturalcrit');
+mongoose.connect(config.get('mongodb_uri') || config.get('mongolab_uri') || 'mongodb://localhost/naturalcrit',
+	{ retryWrites: false, useNewUrlParser: true });
 mongoose.connection.on('error', ()=>{
 	console.log('Error : Could not connect to a Mongo Database.');
 	console.log('        If you are running locally, make sure mongodb.exe is running.');
@@ -43,9 +44,14 @@ const HomebrewModel = require('./server/homebrew.model.js').model;
 const welcomeText = require('fs').readFileSync('./client/homebrew/pages/homePage/welcome_msg.md', 'utf8');
 const changelogText = require('fs').readFileSync('./changelog.md', 'utf8');
 
+String.prototype.replaceAll = function(s, r){return this.split(s).join(r);};
+
+//Robots.txt
+app.get('/robots.txt', (req, res)=>{
+	return res.sendFile(`${__dirname}/robots.txt`);
+});
 
 //Source page
-String.prototype.replaceAll = function(s, r){return this.split(s).join(r);};
 app.get('/source/:id', (req, res)=>{
 	HomebrewModel.get({ shareId: req.params.id })
 		.then((brew)=>{
@@ -58,7 +64,7 @@ app.get('/source/:id', (req, res)=>{
 		});
 });
 
-
+//User Page
 app.get('/user/:username', (req, res, next)=>{
 	const fullAccess = req.account && (req.account.username == req.params.username);
 	HomebrewModel.getByUser(req.params.username, fullAccess)
@@ -71,7 +77,7 @@ app.get('/user/:username', (req, res, next)=>{
 		});
 });
 
-
+//Edit Page
 app.get('/edit/:id', (req, res, next)=>{
 	HomebrewModel.get({ editId: req.params.id })
 		.then((brew)=>{
@@ -114,22 +120,21 @@ app.get('/print/:id', (req, res, next)=>{
 });
 
 
-//Render Page
-const render = require('vitreum/steps/render');
+//Render the page
+//const render = require('.build/render');
 const templateFn = require('./client/template.js');
 app.use((req, res)=>{
-	render('homebrew', templateFn, {
+	const props = {
 		version     : require('./package.json').version,
 		url         : req.originalUrl,
 		welcomeText : welcomeText,
 		changelog   : changelogText,
 		brew        : req.brew,
 		brews       : req.brews,
-		account     : req.account
-	})
-		.then((page)=>{
-			return res.send(page);
-		})
+		account     : req.account,
+	};
+	templateFn('homebrew', props)
+		.then((page)=>res.send(page))
 		.catch((err)=>{
 			console.log(err);
 			return res.sendStatus(500);

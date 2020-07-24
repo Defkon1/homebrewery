@@ -1,3 +1,4 @@
+require('./brewItem.less');
 const React = require('react');
 const createClass = require('create-react-class');
 const _     = require('lodash');
@@ -26,7 +27,7 @@ const BrewItem = createClass({
 			if(!confirm('Are you REALLY sure? You will lose editor access to this document.')) return;
 		}
 
-		request.get(`/api/remove/${this.props.brew.editId}`)
+		request.delete(`/api/${this.props.brew.editId}`)
 			.send()
 			.end(function(err, res){
 				location.reload();
